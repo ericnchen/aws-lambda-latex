@@ -9,9 +9,6 @@ using AWSLambda: create_lambda, update_lambda, lambda_configuration,
 using InfoZIP
 
 function all()
-    download()
-    build()
-    zip()
     deploy()
     test()
 end
