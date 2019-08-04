@@ -1,61 +1,41 @@
-import os
-import io
-import shutil
-import subprocess
+# -*- coding: utf-8 -*-
 import base64
+import io
+import os
+import pathlib
+import subprocess
 import zipfile
-import boto3
+
 
 def lambda_handler(event, context):
-    
     # Extract input ZIP file to /tmp/latex...
-    shutil.rmtree("/tmp/latex", ignore_errors=True)
-    os.mkdir("/tmp/latex")
+    unzip_dir = "/tmp/latex"
+    input_zip = zipfile.ZipFile(io.BytesIO(base64.b64decode(event["input"])))
+    input_zip.extractall(path=unzip_dir)
+    os.chdir(unzip_dir)
 
-    print(event)
-
-    if 'input_bucket' in event:
-        r = boto3.client('s3').get_object(Bucket=event['input_bucket'],
-                                          Key=event['input_key'])
-        bytes = r["Body"].read()
-    else:
-        bytes = base64.b64decode(event["input"])
-
-    z = zipfile.ZipFile(io.BytesIO(bytes))
-    z.extractall(path="/tmp/latex")
-
-    os.environ['PATH'] += ":/var/task/texlive/2017/bin/x86_64-linux/"
-    os.environ['HOME'] = "/tmp/latex/"
-    os.environ['PERL5LIB'] = "/var/task/texlive/2017/tlpkg/TeXLive/"
-
-    os.chdir("/tmp/latex/")
+    # Assume that if test_input.tex included then that has priority, else main.tex.
+    input_fn = pathlib.Path("test_input.tex")
+    input_fn = input_fn.name if input_fn.exists() else "main.tex"
+    output_fn = f"{input_fn[:-4]}.pdf"
 
     # Run pdflatex...
-    r = subprocess.run(["latexmk",
-                        "-verbose",
-                        "-interaction=batchmode",
-                        "-pdf",
-                        "-output-directory=/tmp/latex",
-                        "document.tex"],
-                       stdout=subprocess.PIPE,
-                       stderr=subprocess.STDOUT)
-    print(r.stdout.decode('utf_8'))
+    r = subprocess.run(
+        [
+            "latexmk",
+            "-verbose",
+            "-interaction=batchmode",
+            "-pdf",
+            "-output-directory=/tmp/latex",
+            input_fn,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
 
-    if "output_bucket" in event:
-        boto3.client('s3').upload_file("document.pdf",
-                                       event['output_bucket'],
-                                       event['output_key'])
-        return {
-            "stdout": r.stdout.decode('utf_8')
-        }
+    # Read the compiled document and encode it for output.
+    with open(output_fn, "rb") as f:
+        pdf64 = base64.b64encode(f.read()).decode("ascii")
 
-    else:
-        # Read "document.pdf"...
-        with open("document.pdf", "rb") as f:
-            pdf = f.read()
-
-        # Return base64 encoded pdf and stdout log from pdflaxex...
-        return {
-            "output": base64.b64encode(pdf).decode('ascii'),
-            "stdout": r.stdout.decode('utf_8')
-        }
+    # Return base64 encoded pdf and stdout log from pdflatex...
+    return {"output": pdf64, "stdout": r.stdout.decode("utf_8"), "filename": output_fn}

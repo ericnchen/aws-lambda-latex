@@ -71,3 +71,12 @@ RUN tlmgr install \
     rm -rf /opt/texlive/2019/tlpkg/texlive.tlpdb* \
            /opt/texlive/2019/texmf-dist/source/latex/koma-script/doc \
            /opt/texlive/2019/texmf-dist/doc
+
+# Make symlinks to /opt/bin and /opt/lib since that's where Lambda expects it.
+RUN mkdir /opt/bin /opt/lib && \
+    cd /opt/bin && \
+    ln -s ../perl/bin/* . && \
+    cd /opt/lib && \
+    ln -s ../perl/lib/* . && \
+    cd /opt/bin && \
+    ln -s ../texlive/2019/bin/x86_64-linux/* .
