@@ -1,11 +1,14 @@
+# texlive.profile written on Sun Aug  4 15:53:50 2019 UTC
+# It will NOT be updated and reflects only the
+# installation profile at installation time.
 selected_scheme scheme-custom
-TEXDIR /var/task/texlive/2017
-TEXMFCONFIG /tmp/texmf-config
-TEXMFHOME /tmp/texmf
-TEXMFLOCAL /var/task/texlive/texmf-local
-TEXMFSYSCONFIG /var/task/texlive/2017/texmf-config
-TEXMFSYSVAR /var/task/texlive/2017/texmf-var
-TEXMFVAR /tmp/texmf-var
+TEXDIR /opt/texlive/2019
+TEXMFCONFIG /opt/texlive/.texlive2019/texmf-config
+TEXMFHOME /opt/texlive/texmf
+TEXMFLOCAL /opt/texlive/texmf-local
+TEXMFSYSCONFIG /opt/texlive/2019/texmf-config
+TEXMFSYSVAR /opt/texlive/2019/texmf-var
+TEXMFVAR /opt/texlive/.texlive2019/texmf-var
 binary_x86_64-linux 1
 collection-basic 1
 collection-latex 1
@@ -23,3 +26,7 @@ tlpdbopt_generate_updmap 0
 tlpdbopt_install_docfiles 0
 tlpdbopt_install_srcfiles 0
 tlpdbopt_post_code 1
+tlpdbopt_sys_bin /usr/local/bin
+tlpdbopt_sys_info /usr/local/share/info
+tlpdbopt_sys_man /usr/local/share/man
+tlpdbopt_w32_multi_user 0
