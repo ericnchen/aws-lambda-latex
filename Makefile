@@ -19,14 +19,12 @@ build: build/perl-5.30.0.tar.gz build/install-tl-unx.tar.gz
 
 layers:
 	rm -f build/layers.zip
-	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex zip --symlinks -r -9 /var/host/layers.zip /opt
+	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex bash -c "cd /opt; zip --symlinks -r -9 /var/host/layers.zip ."
 
 
 localtest: layers
-	rm -rf build/opt
-	cd build && unzip layers.zip
-	rm -rf build/test-input.zip
-	cd test-input && zip ../build/test-input.zip *
+	rm -rf build/opt && mkdir build/opt && cd build/opt && unzip ../layers.zip
+	rm -rf build/test-input.zip && cd test-input && zip ../build/test-input.zip *
 	docker run --rm -v ${PWD}:/var/task -v ${PWD}/build/opt:/opt lambci/lambda:python3.7 localtest.localtest
 
 
