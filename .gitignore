@@ -1,6 +1,5 @@
 build/install-tl-unx.tar.gz
+build/lambdalatex.zip
+build/main.pdf
 build/perl-5.30.0.tar.gz
 build/test-input.zip
-build/opt/
-build/layers.zip
-build/main.pdf
