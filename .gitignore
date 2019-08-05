@@ -1,8 +1,6 @@
 build/install-tl-unx.tar.gz
-build/perl.zip
-build/texlive.zip
 build/perl-5.30.0.tar.gz
-build/symlinks.zip
-build/test-payload.zip
-build/test_input.pdf
+build/test-input.zip
 build/opt/
+build/layers.zip
+build/main.pdf

@@ -1,6 +1,6 @@
 default: help
 
-.PHONY: build perl texlive
+.PHONY: build
 
 
 help:
@@ -17,18 +17,29 @@ build: build/perl-5.30.0.tar.gz build/install-tl-unx.tar.gz
 	docker build --force-rm -t echen/lambdalatex:latest .
 
 
-localtest: build/test-payload.zip build/perl.zip build/texlive.zip build/symlinks.zip
+layers:
+	rm -f build/layers.zip
+	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex zip --symlinks -r -9 /var/host/layers.zip /opt
+
+
+localtest: layers
 	rm -rf build/opt
-	cd build && unzip perl.zip && unzip texlive.zip && unzip symlinks.zip
+	cd build && unzip layers.zip
+	rm -rf build/test-input.zip
+	cd test-input && zip ../build/test-input.zip *
 	docker run --rm -v ${PWD}:/var/task -v ${PWD}/build/opt:/opt lambci/lambda:python3.7 localtest.localtest
 
 
-clean: clean-downloads
-	rm -f build/perl.zip build/texlive.zip build/symlinks.zip
+clean: clean-downloads clean-tests
+	rm -f build/layers.zip
 
 
 clean-downloads:
 	rm -f build/install-tl-unx.tar.gz build/perl-5.30.0.tar.gz
+
+
+clean-tests:
+	rm -rf build/test-input.zip build/main.pdf build/opt
 
 
 
@@ -38,15 +49,3 @@ build/perl-5.30.0.tar.gz:
 
 build/install-tl-unx.tar.gz:
 	cd build && curl -LO http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
-
-build/test-payload.zip:
-	zip build/test-payload.zip test_input.tex
-
-build/perl.zip:
-	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex zip --symlinks -r -9 /var/host/perl.zip /opt/perl
-
-build/texlive.zip:
-	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex zip --symlinks -r -9 /var/host/texlive.zip /opt/texlive
-
-build/symlinks.zip:
-	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex zip --symlinks -r -9 /var/host/symlinks.zip /opt/bin /opt/lib

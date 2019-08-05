@@ -9,7 +9,7 @@ import lambda_function
 
 def localtest(event, context):
     # Read a simple zip file and base64 encode it.
-    with open("/var/task/build/test-payload.zip", "rb") as pl:
+    with open("/var/task/build/test-input.zip", "rb") as pl:
         pl64 = base64.b64encode(pl.read())
 
     # Call the lambda function.

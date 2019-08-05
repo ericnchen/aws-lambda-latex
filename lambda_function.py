@@ -14,10 +14,9 @@ def lambda_handler(event, context):
     input_zip.extractall(path=unzip_dir)
     os.chdir(unzip_dir)
 
-    # Assume that if test_input.tex included then that has priority, else main.tex.
-    input_fn = pathlib.Path("test_input.tex")
-    input_fn = input_fn.name if input_fn.exists() else "main.tex"
-    output_fn = f"{input_fn[:-4]}.pdf"
+    # Always use main.tex for the main file to compile.
+    input_fn = pathlib.Path("main.tex").name
+    output_fn = pathlib.Path(input_fn).with_suffix('.pdf').name
 
     # Run pdflatex...
     r = subprocess.run(
