@@ -3,3 +3,4 @@ build/lambdalatex.zip
 build/main.pdf
 build/perl-5.30.0.tar.gz
 build/test-input.zip
+.serverless
