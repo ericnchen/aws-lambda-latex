@@ -1,22 +1,36 @@
 # -*- coding: utf-8 -*-
 import base64
 import io
+import json
 import os
 import pathlib
 import subprocess
 import zipfile
 
 
+def get_base64_encoded_zip_string(event):
+    """Extract the base64 encoded zip file as a string from an input event."""
+    # When lambda_handler is called through the API Gateway extra parsing needed.
+    if "body" in event:
+        return json.loads(event["body"])["input"]
+
+    # When lambda_handler is called directly just take the input key.
+    return event["input"]
+
+
 def lambda_handler(event, context):
-    # Extract input ZIP file to /tmp/latex...
+    # Parse and extract inputs.
+    input_str = get_base64_encoded_zip_string(event)
+    input_zip = zipfile.ZipFile(io.BytesIO(base64.b64decode(input_str)))
+
+    # Extract the contents to a temporary directory and change to it.
     unzip_dir = "/tmp/latex"
-    input_zip = zipfile.ZipFile(io.BytesIO(base64.b64decode(event["input"])))
     input_zip.extractall(path=unzip_dir)
     os.chdir(unzip_dir)
 
     # Always use main.tex for the main file to compile.
-    input_fn = pathlib.Path("main.tex").name
-    output_fn = pathlib.Path(input_fn).with_suffix('.pdf').name
+    infile = pathlib.Path("main.tex")
+    outfile = pathlib.Path(infile.name).with_suffix(".pdf")
 
     # Run pdflatex...
     r = subprocess.run(
@@ -26,15 +40,21 @@ def lambda_handler(event, context):
             "-interaction=batchmode",
             "-pdf",
             "-output-directory=/tmp/latex",
-            input_fn,
+            infile.name,
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
 
-    # Read the compiled document and encode it for output.
-    with open(output_fn, "rb") as f:
-        pdf64 = base64.b64encode(f.read()).decode("ascii")
-
-    # Return base64 encoded pdf and stdout log from pdflatex...
-    return {"output": pdf64, "stdout": r.stdout.decode("utf_8"), "filename": output_fn}
+    # The response needs to have, at minimum, the "body" key.
+    return {
+        "body": json.dumps(
+            {
+                "output": base64.b64encode(outfile.read_bytes()).decode("utf-8"),
+                "stdout": r.stdout.decode("utf-8") if r.stdout is not None else None,
+                "stderr": r.stderr.decode("utf-8") if r.stderr is not None else None,
+            }
+        ),
+        "isBase64Encoded": False,
+        "statusCode": 200,
+    }
