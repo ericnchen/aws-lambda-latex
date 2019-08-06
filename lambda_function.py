@@ -4,6 +4,7 @@ import io
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import zipfile
 
@@ -18,15 +19,19 @@ def get_base64_encoded_zip_string(event):
     return event["input"]
 
 
+# noinspection PyUnusedLocal
 def lambda_handler(event, context):
     # Parse and extract inputs.
     input_str = get_base64_encoded_zip_string(event)
     input_zip = zipfile.ZipFile(io.BytesIO(base64.b64decode(input_str)))
 
     # Extract the contents to a temporary directory and change to it.
-    unzip_dir = "/tmp/latex"
-    input_zip.extractall(path=unzip_dir)
-    os.chdir(unzip_dir)
+    unzip_dir = pathlib.Path("/tmp/latex")
+    if unzip_dir.exists():
+        shutil.rmtree(unzip_dir)
+    unzip_dir.mkdir()
+    input_zip.extractall(path=str(unzip_dir))
+    os.chdir(str(unzip_dir))
 
     # Always use main.tex for the main file to compile.
     infile = pathlib.Path("main.tex")
@@ -39,11 +44,10 @@ def lambda_handler(event, context):
             "-verbose",
             "-interaction=batchmode",
             "-pdf",
-            "-output-directory=/tmp/latex",
+            f"-output-directory={str(unzip_dir)}",
             infile.name,
         ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        capture_output=True,
     )
 
     # The response needs to have, at minimum, the "body" key.
@@ -55,6 +59,7 @@ def lambda_handler(event, context):
                 "stderr": r.stderr.decode("utf-8") if r.stderr is not None else None,
             }
         ),
+        "headers": {"Content-Type": "application/json"},
         "isBase64Encoded": False,
         "statusCode": 200,
     }
