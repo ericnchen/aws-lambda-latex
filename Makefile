@@ -42,7 +42,8 @@ package:
 # Run a quick testcase with a pristine docker environment and our built layer.
 # The localtest-quick target speeds up the process by running only the test
 # function, assuming that the testing environment is already set up.
-localtest: build package build/test-input.zip
+# TODO verify localtest* works
+localtest: build package
 	rm -rf /tmp/lambdalatex
 	mkdir -p /tmp/lambdalatex/opt
 	cp build/lambdalatex.zip /tmp/lambdalatex/opt
@@ -54,11 +55,6 @@ localtest: build package build/test-input.zip
 localtest-quick:
 	docker run --rm -v ${PWD}:/var/task -v /tmp/lambdalatex/opt:/opt lambci/lambda:python3.7 localtest.localtest
 
-build/test-input.zip: test-input/gull.png test-input/main.tex
-	rm -f build/test-input.zip
-	mkdir -p build
-	cd test-input && zip ../build/test-input.zip *
-
 
 # Remove all built artifacts.
 clean:
@@ -66,6 +62,5 @@ clean:
 #	rm -f build/lambdalatex.zip
 #	rm -f build/main.pdf
 	rm -f vendor/perl-5.30.0.tar.gz
-#	rm -f build/test-input.zip
 	rm -rf build
 	rm -rf /tmp/lambdalatex
