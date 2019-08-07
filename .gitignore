@@ -4,4 +4,3 @@ lambdalatex-layer/vendor/perl-5.30.0.tar.gz
 build/main.pdf
 build/test-input.zip
 .serverless
-config-serverless.json

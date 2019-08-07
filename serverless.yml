@@ -30,7 +30,7 @@ functions:
           method: post
           private: true
     layers:
-      - ${file(config-serverless.json):layer}
+      - ${cf:lambdalatex-layer-dev.LambdalatexLayerExport}
 
 package:
   exclude:
