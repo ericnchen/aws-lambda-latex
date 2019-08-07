@@ -50,16 +50,26 @@ def lambda_handler(event, context):
         capture_output=True,
     )
 
+    # Sometimes the compilation will fail and then outfile won't exist.
+    # We still want to return an output, though, so set it as an empty string.
+    # Also, take this time to set the return code.
+    if outfile.exists():
+        output_str = base64.b64encode(outfile.read_bytes()).decode("utf-8")
+        status_code = 200
+    else:
+        output_str = ""
+        status_code = 500
+
     # The response needs to have, at minimum, the "body" key.
     return {
         "body": json.dumps(
             {
-                "output": base64.b64encode(outfile.read_bytes()).decode("utf-8"),
+                "output": output_str,
                 "stdout": r.stdout.decode("utf-8") if r.stdout is not None else None,
                 "stderr": r.stderr.decode("utf-8") if r.stderr is not None else None,
             }
         ),
         "headers": {"Content-Type": "application/json"},
         "isBase64Encoded": False,
-        "statusCode": 200,
+        "statusCode": status_code,
     }
