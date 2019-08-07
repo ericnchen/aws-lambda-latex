@@ -1,7 +1,7 @@
-vendor/install-tl-unx.tar.gz
-build/lambdalatex.zip
+lambdalatex-layer/lambdalatex-layer.zip
+lambdalatex-layer/vendor/install-tl-unx.tar.gz
+lambdalatex-layer/vendor/perl-5.30.0.tar.gz
 build/main.pdf
-vendor/perl-5.30.0.tar.gz
 build/test-input.zip
 .serverless
 config-serverless.json
