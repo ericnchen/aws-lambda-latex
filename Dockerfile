@@ -2,8 +2,8 @@ FROM lambci/lambda:build
 
 # Add externally downloaded files to compile inside the container.
 WORKDIR /var/src
-ADD build/perl-5.30.0.tar.gz .
-ADD build/install-tl-unx.tar.gz .
+ADD vendor/perl-5.30.0.tar.gz .
+ADD vendor/install-tl-unx.tar.gz .
 
 # Build Perl because Amazon Linux instances no longer include it.
 RUN cd perl-5.* && \
@@ -25,16 +25,16 @@ RUN cd install-tl-* && \
 # Update PATH.
 ENV PATH=/opt/perl/bin:/opt/texlive/2019/bin/x86_64-linux:$PATH
 
-# Install/remove TeXLive packages (check to make sure I need/want all of these).
+# Install/remove TeXLive packages as needed.
 RUN tlmgr install \
             latexmk \
-#            xcolor \
+            xcolor \
 #            tcolorbox \
-#            pgf \
+            pgf \
 #            environ \
 #            trimspaces \
-#            etoolbox \
-#            booktabs \
+            etoolbox \
+            booktabs \
 #            lastpage \
 #            pgfplots \
 #            marginnote \
@@ -46,7 +46,7 @@ RUN tlmgr install \
 #            xwatermark \
 #            catoptions \
 #            ltxkeys \
-#            framed \
+            framed \
 #            parskip \
 #            endnotes \
 #            footmisc \
@@ -59,19 +59,50 @@ RUN tlmgr install \
 #            multirow \
 #            calculator \
 #            adjustbox \
-#            xkeyval \
+            xkeyval \
 #            collectbox \
 #            siunitx \
 #            l3kernel \
 #            l3packages \
 #            helvetic \
 #            charter \
+            memoir \
+            ifetex \
+            layouts \
+            glossaries \
+            mfirstuc \
+            textcase \
+            xfor \
+            datatool \
+            substr \
+            fp \
+            fancyvrb \
+            tabulary \
+            ec \
+            listings \
+            ulem \
+            soul \
+            xargs \
+            todonotes \
+            beamer \
+            translator \
+            patchcmd \
+            acronym \
+            bigfoot \
+            xstring \
+            subfigure \
+            microtype \
             && \
 #    tlmgr remove --force luatex && \
     rm -f /opt/texlive/2019/tlpkg/texlive.tlpdb* && \
     rm -f /opt/texlive/2019/tlpkg/translations/*.po
 #           /opt/texlive/2019/texmf-dist/source/latex/koma-script/doc \
 #           /opt/texlive/2019/texmf-dist/doc
+
+# Add the multimarkdown6 include files.
+# See: https://github.com/fletcher/MultiMarkdown-6/tree/develop/texmf/tex/latex/mmd6
+COPY vendor/multimarkdown6-latex-includes /opt/texlive/texmf-local/tex/latex/local/mmd/
+RUN texhash
 
 # Make symlinks to /opt/bin and /opt/lib since that's where Lambda expects it.
 RUN mkdir /opt/bin /opt/lib && \

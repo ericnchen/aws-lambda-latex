@@ -1,5 +1,6 @@
 # Ignore everything in this directory except for whitelisted (!) items.
 *
-!build/install-tl-unx.tar.gz
-!build/perl-5.30.0.tar.gz
+!vendor/install-tl-unx.tar.gz
+!vendor/perl-5.30.0.tar.gz
 !texlive.profile
+!vendor/multimarkdown6-latex-includes

@@ -21,16 +21,14 @@ help:
 # Build the Docker image with perl and texlive installed into /opt for packaging.
 # The downloadable files are kept as separate targets so that they won't be downloaded
 # if the file has already been downloaded.
-build: build/perl-5.30.0.tar.gz build/install-tl-unx.tar.gz
+build: vendor/perl-5.30.0.tar.gz vendor/install-tl-unx.tar.gz
 	docker build --force-rm -t echen/lambdalatex:latest .
 
-build/perl-5.30.0.tar.gz:
-	mkdir -p build
-	cd build && curl -LO https://www.cpan.org/src/5.0/perl-5.30.0.tar.gz
+vendor/perl-5.30.0.tar.gz:
+	cd vendor && curl -LO https://www.cpan.org/src/5.0/perl-5.30.0.tar.gz
 
-build/install-tl-unx.tar.gz:
-	mkdir -p build
-	cd build && curl -LO http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
+vendor/install-tl-unx.tar.gz:
+	cd vendor && curl -LO http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
 
 
 # Package /opt into a zip archive for AWS Lambda to use as a runtime Layer.
@@ -38,7 +36,7 @@ build/install-tl-unx.tar.gz:
 # not sure how to delete non-existant files in a previously created zip archive.
 package:
 	rm -f build/lambdalatex.zip
-	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex bash -c "cd /opt; zip -qry -9 /var/host/lambdalatex.zip ."
+	docker run --rm -it -v ${PWD}/build:/var/host echen/lambdalatex bash -c "cd /opt; zip --symlinks -qry -9 /var/host/lambdalatex.zip ."
 
 
 # Run a quick testcase with a pristine docker environment and our built layer.
@@ -64,10 +62,10 @@ build/test-input.zip: test-input/gull.png test-input/main.tex
 
 # Remove all built artifacts.
 clean:
-#	rm -f build/install-tl-unx.tar.gz
+	rm -f vendor/install-tl-unx.tar.gz
 #	rm -f build/lambdalatex.zip
 #	rm -f build/main.pdf
-#	rm -f build/perl-5.30.0.tar.gz
+	rm -f vendor/perl-5.30.0.tar.gz
 #	rm -f build/test-input.zip
 	rm -rf build
 	rm -rf /tmp/lambdalatex
