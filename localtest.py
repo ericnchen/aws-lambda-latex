@@ -4,7 +4,7 @@
 import base64
 import pathlib
 
-import lambda_function
+from lambdalatex import lambda_function
 
 
 def localtest(event, context):
