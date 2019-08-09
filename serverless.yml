@@ -23,7 +23,7 @@ provider:
 
 functions:
   compile:
-    handler: lambda_function.lambda_handler
+    handler: handler.lambda_handler
     events:
       - http:
           path: compile
@@ -36,4 +36,5 @@ package:
   exclude:
     - ./**
   include:
-    - lambda_function.py
+    - handler.py
+    - lambdalatex/*.py
