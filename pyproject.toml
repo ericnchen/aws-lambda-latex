@@ -8,6 +8,7 @@ authors = ["Eric Chen <eric@ericnchen.com>"]
 python = "^3.7"
 boto3 = "^1.9"
 requests = "^2.22"
+click = "^7.0"
 
 [tool.poetry.dev-dependencies]
 
