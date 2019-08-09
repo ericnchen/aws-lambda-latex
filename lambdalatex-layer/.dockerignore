@@ -4,3 +4,4 @@
 !vendor/perl-5.30.0.tar.gz
 !texlive.profile
 !vendor/multimarkdown6-latex-includes
+!install-tlmgr-packages.sh

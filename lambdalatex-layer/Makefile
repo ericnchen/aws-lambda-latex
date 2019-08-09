@@ -33,7 +33,7 @@ build: download
 # not sure how to delete non-existant files in a previously created zip archive.
 package:
 	rm -f lambdalatex-layer.zip
-	docker run --rm -it -v ${PWD}:/var/host lambdalatex-layer:latest bash -c "cd /opt; zip --symlinks -qry -9 /var/host/lambdalatex-layer.zip ."
+	docker run --rm -it -v ${PWD}:/var/host lambdalatex-layer:latest bash -c "cd /opt; zip -qry -9 /var/host/lambdalatex-layer.zip ."
 
 deploy:
 	sls deploy --verbose
@@ -49,3 +49,4 @@ test:
 clean:
 	$(MAKE) -C vendor clean
 	rm -f lambdalatex-layer.zip
+	docker image prune -f
