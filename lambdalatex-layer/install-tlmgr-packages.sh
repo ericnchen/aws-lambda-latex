@@ -7,6 +7,9 @@ export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
 # Install packages as needed.
 tlmgr install latexmk
 
+# Additional symlinks need to be manually created.
+ln -s /opt/texlive/2019/bin/x86_64-linux/latexmk /opt/bin/latexmk
+
 #RUN tlmgr install \
 #            latexmk \
 #            xcolor \
