@@ -5,7 +5,7 @@ export PATH=/opt/bin:$PATH
 export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
 
 # Install packages as needed.
-tlmgr install latexmk
+tlmgr install latexmk beamer etoolbox translator
 
 # Additional symlinks need to be manually created.
 ln -s /opt/texlive/2019/bin/x86_64-linux/latexmk /opt/bin/latexmk
@@ -17,7 +17,6 @@ ln -s /opt/texlive/2019/bin/x86_64-linux/latexmk /opt/bin/latexmk
 #            pgf \
 ##            environ \
 ##            trimspaces \
-#            etoolbox \
 #            booktabs \
 ##            lastpage \
 ##            pgfplots \
@@ -69,7 +68,6 @@ ln -s /opt/texlive/2019/bin/x86_64-linux/latexmk /opt/bin/latexmk
 #            xargs \
 #            todonotes \
 #            beamer \
-#            translator \
 #            patchcmd \
 #            acronym \
 #            bigfoot \
