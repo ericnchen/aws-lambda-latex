@@ -51,7 +51,7 @@ def main(input_dir, output_fn, layer):
     layer_path = make_layer_dir()
     unzip_layer(layer_path, layer_zipfile_path)
 
-    response = subprocess.run(
+    r = subprocess.run(
         [
             "docker",
             "run",
@@ -65,24 +65,17 @@ def main(input_dir, output_fn, layer):
             json.dumps({"input": make_input_str(input_path)}),
             json.dumps({}),
         ],
+        encoding="utf-8",
         capture_output=True,
     )
 
-    if response.returncode == 0:
-        click.echo("Successfully compiled the document with latexmk.")
-        response_body = json.loads(json.loads(response.stdout.decode("utf-8"))["body"])
-        output_path.write_bytes(base64.b64decode(response_body["output"]))
-        click.echo(f"Document saved to {output_path.resolve()}")
-    else:
-        stdout = response.stdout.decode("utf-8")
-        stderr = response.stderr.decode("utf-8")
-        output_path.with_suffix(".stdout.txt").write_text(stdout)
-        output_path.with_suffix(".stderr.txt").write_text(stderr)
-        click.echo("An error occurred with the following information:")
-        click.echo(f"    return    {response.returncode}")
-        click.echo(f"    stdout    {stdout}")
-        click.echo(f"    stderr    {stderr}")
-        click.echo(f"This information was also written to the output file.")
+    stdout_test = r.stdout
+    output_path.with_suffix('.stdout.txt').write_text(stdout_test)
+    output_path.with_suffix('.stderr.txt').write_text(r.stderr)
+    body = json.loads(json.loads(stdout_test)["body"])
+    output_path.with_suffix('.stdout.latexmk.txt').write_text(body['stdout'])
+    output_path.with_suffix('.stderr.latexmk.txt').write_text(body['stderr'])
+    output_path.write_bytes(base64.b64decode(body["pdf"]))
 
     # Clean up temporary directory.
     shutil.rmtree(layer_path, ignore_errors=True)

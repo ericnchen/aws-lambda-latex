@@ -2,74 +2,56 @@
 import base64
 import io
 import json
-import os
 import pathlib
-import shutil
 import subprocess
+import tempfile
 import zipfile
 
-
-def get_base64_encoded_zip_string(event):
-    """Extract the base64 encoded zip file as a string from an input event."""
-    # When lambda_handler is called through the API Gateway extra parsing needed.
-    if "body" in event:
-        return json.loads(event["body"])["input"]
-
-    # When lambda_handler is called directly just take the input key.
-    return event["input"]
+STATUS_SUCCESS_PDF_GENERATED = 200
 
 
 # noinspection PyUnusedLocal
 def lambda_handler(event, context):
-    # Parse and extract inputs.
-    input_str = get_base64_encoded_zip_string(event)
-    input_zip = zipfile.ZipFile(io.BytesIO(base64.b64decode(input_str)))
+    """
+    Events:
+        main_filename: name of the main latex file to compile (defaults to main.tex)
+    """
+    td = tempfile.TemporaryDirectory()
 
-    # Extract the contents to a temporary directory and change to it.
-    unzip_dir = pathlib.Path("/tmp/latex")
-    if unzip_dir.exists():
-        shutil.rmtree(unzip_dir)
-    unzip_dir.mkdir()
-    input_zip.extractall(path=str(unzip_dir))
-    os.chdir(str(unzip_dir))
+    unzip_dir = pathlib.Path(td.name)
+    extract_zipfile(get_zipfile(event), target=unzip_dir)
 
-    # Always use main.tex for the main file to compile.
-    infile = pathlib.Path("main.tex")
-    outfile = pathlib.Path(infile.name).with_suffix(".pdf")
+    infile = unzip_dir / event.get("main_filename", "main.tex")
 
-    # Run pdflatex...
-    r = subprocess.run(
-        [
-            "latexmk",
-            "-verbose",
-            "-interaction=batchmode",
-            "-pdf",
-            f"-output-directory={str(unzip_dir)}",
-            infile.name,
-        ],
-        capture_output=True,
-    )
+    cmd = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", infile]
+    r = subprocess.run(cmd, cwd=unzip_dir, encoding="utf-8", capture_output=True)
 
-    # Sometimes the compilation will fail and then outfile won't exist.
-    # We still want to return an output, though, so set it as an empty string.
-    # Also, take this time to set the return code.
-    if outfile.exists():
-        output_str = base64.b64encode(outfile.read_bytes()).decode("utf-8")
-        status_code = 200
-    else:
-        output_str = ""
-        status_code = 500
+    body = {
+        "pdf": read_pdf(infile.with_suffix(".pdf")),
+        "stdout": r.stdout,
+        "stderr": r.stderr,
+    }
 
-    # The response needs to have, at minimum, the "body" key.
+    td.cleanup()
+
     return {
-        "body": json.dumps(
-            {
-                "output": output_str,
-                "stdout": r.stdout.decode("utf-8") if r.stdout is not None else None,
-                "stderr": r.stderr.decode("utf-8") if r.stderr is not None else None,
-            }
-        ),
+        "body": json.dumps(body),
         "headers": {"Content-Type": "application/json"},
         "isBase64Encoded": False,
-        "statusCode": status_code,
+        "statusCode": STATUS_SUCCESS_PDF_GENERATED if body["pdf"] != "" else 500,
     }
+
+
+def read_pdf(pdf):
+    """Read a pdf file and base64 encode into a string."""
+    return base64.b64encode(pdf.read_bytes()).decode("utf-8") if pdf.exists() else ""
+
+
+def extract_zipfile(zip_file: zipfile.ZipFile, target: pathlib.Path):
+    """Extract the zipfile to the target directory."""
+    zip_file.extractall(path=target)
+
+
+def get_zipfile(event):
+    """Get input as a zipfile from event trigger."""
+    return zipfile.ZipFile(io.BytesIO(base64.b64decode(event["input"])))
