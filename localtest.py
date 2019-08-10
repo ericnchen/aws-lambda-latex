@@ -23,11 +23,11 @@ import click
     help="path to an input directory (e.g., examples/article)",
 )
 @click.option(
-    "--output",
-    "output_fn",
+    "--output_dir",
+    "output_dir",
     type=click.Path(),
-    default="out.pdf",
-    help="path to/of output file (if error then extension will be replaced with .txt)",
+    default=str(pathlib.Path.cwd()),
+    help="directory to write output files to",
     show_default=True,
 )
 @click.option(
@@ -37,15 +37,22 @@ import click
     show_default=True,
     help="path to the layer file to use",
 )
-def main(input_dir, output_fn, layer):
+def main(input_dir, output_dir, layer):
     # Transform inputs.
     input_path = pathlib.Path(input_dir)
-    output_path = pathlib.Path(output_fn)
     layer_zipfile_path = pathlib.Path(layer.name).resolve()
+
+    output_dir = pathlib.Path(output_dir).absolute()
+    output_dir.mkdir(exist_ok=True, parents=True)
+    pdf_fp = output_dir / 'out.pdf'
+    stdout_fp = pdf_fp.with_suffix('.stdout.txt')
+    stderr_fp = pdf_fp.with_suffix('.stderr.txt')
+    stdout_latexmk_fp = pdf_fp.with_suffix('.stdout.latexmk.txt')
+    stderr_latexmk_fp = pdf_fp.with_suffix('.stderr.latexmk.txt')
 
     click.echo("Running local test with the following arguments:")
     click.echo(f"    Input     {input_dir}")
-    click.echo(f"    Output    {output_fn}")
+    click.echo(f"    Output    out.pdf")
     click.echo(f"    Layer     {layer.name}")
 
     layer_path = make_layer_dir()
@@ -70,12 +77,12 @@ def main(input_dir, output_fn, layer):
     )
 
     stdout_test = r.stdout
-    output_path.with_suffix(".stdout.txt").write_text(stdout_test)
-    output_path.with_suffix(".stderr.txt").write_text(r.stderr)
+    stdout_fp.write_text(stdout_test)
+    stderr_fp.write_text(r.stderr)
     body = json.loads(json.loads(stdout_test)["body"])
-    output_path.with_suffix(".stdout.latexmk.txt").write_text(body["stdout"])
-    output_path.with_suffix(".stderr.latexmk.txt").write_text(body["stderr"])
-    output_path.write_bytes(base64.b64decode(body["pdf"]))
+    stdout_latexmk_fp.write_text(body["stdout"])
+    stderr_latexmk_fp.write_text(body["stderr"])
+    pdf_fp.write_bytes(base64.b64decode(body["pdf"]))
 
     # Clean up temporary directory.
     shutil.rmtree(layer_path, ignore_errors=True)
