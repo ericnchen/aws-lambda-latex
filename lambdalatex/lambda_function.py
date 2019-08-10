@@ -66,7 +66,10 @@ def get_stdout(response: subprocess.CompletedProcess) -> str:
 
 def get_pdfstr(filename: str) -> str:
     """Return a pdf file as a Base64 encoded string."""
-    return base64.b64encode(pathlib.Path(filename).read_bytes()).decode("utf-8")
+    fp = pathlib.Path(filename)
+    if fp.exists():
+        return base64.b64encode(fp.read_bytes()).decode("utf-8")
+    return ""
 
 
 def extract_zipfile(zip_file: zipfile.ZipFile, target: pathlib.Path):
@@ -78,7 +81,7 @@ def extract_zipfile(zip_file: zipfile.ZipFile, target: pathlib.Path):
 
 def get_body(event: dict) -> dict:
     """Get the event body from the lambda handler."""
-    if 'body' in event:
+    if "body" in event:
         logger.info("lambda_handler called from API Gateway")
         return json.loads(event["body"])
     logger.info("lambda_handler called from local Docker image")
