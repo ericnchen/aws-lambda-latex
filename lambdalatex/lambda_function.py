@@ -27,7 +27,11 @@ def lambda_handler(event, context):
     cmd = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", infile]
     r = subprocess.run(cmd, cwd=unzip_dir, encoding="utf-8", capture_output=True)
 
-    output_body = {"pdf": get_pdfstr(pdf), "stdout": get_stdout(r), "stderr": get_stderr(r)}
+    output_body = {
+        "pdf": get_pdfstr(pdf),
+        "stdout": get_stdout(r),
+        "stderr": get_stderr(r),
+    }
 
     td.cleanup()
 
@@ -41,12 +45,12 @@ def lambda_handler(event, context):
 
 def get_stderr(response: subprocess.CompletedProcess) -> str:
     """Get the stderr of the response."""
-    return response.stderr
+    return response["stderr"] if isinstance(response, dict) else response.stderr
 
 
 def get_stdout(response: subprocess.CompletedProcess) -> str:
     """Get the stdout of the response."""
-    return response.stdout
+    return response["stdout"] if isinstance(response, dict) else response.stdout
 
 
 def get_pdfstr(filename: str) -> str:
@@ -61,7 +65,7 @@ def extract_zipfile(zip_file: zipfile.ZipFile, target: pathlib.Path):
 
 def get_body(event: dict) -> dict:
     """Get the event body from the lambda handler."""
-    return json.loads(event['body']) if 'body' in event else event
+    return json.loads(event["body"]) if "body" in event else event
 
 
 def get_zipfile(body: dict) -> zipfile.ZipFile:

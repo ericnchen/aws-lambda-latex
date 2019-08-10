@@ -13,6 +13,8 @@ import zipfile
 
 import click
 
+import lambdalatex as ll
+
 
 @click.command()
 @click.option(
@@ -44,11 +46,11 @@ def main(input_dir, output_dir, layer):
 
     output_dir = pathlib.Path(output_dir).absolute()
     output_dir.mkdir(exist_ok=True, parents=True)
-    pdf_fp = output_dir / 'out.pdf'
-    stdout_fp = pdf_fp.with_suffix('.stdout.txt')
-    stderr_fp = pdf_fp.with_suffix('.stderr.txt')
-    stdout_latexmk_fp = pdf_fp.with_suffix('.stdout.latexmk.txt')
-    stderr_latexmk_fp = pdf_fp.with_suffix('.stderr.latexmk.txt')
+    pdf_fp = output_dir / "out.pdf"
+    stdout_fp = pdf_fp.with_suffix(".stdout.txt")
+    stderr_fp = pdf_fp.with_suffix(".stderr.txt")
+    stdout_latexmk_fp = pdf_fp.with_suffix(".stdout.latexmk.txt")
+    stderr_latexmk_fp = pdf_fp.with_suffix(".stderr.latexmk.txt")
 
     click.echo("Running local test with the following arguments:")
     click.echo(f"    Input     {input_dir}")
@@ -76,12 +78,15 @@ def main(input_dir, output_dir, layer):
         capture_output=True,
     )
 
-    stdout_test = r.stdout
-    stdout_fp.write_text(stdout_test)
-    stderr_fp.write_text(r.stderr)
-    body = json.loads(json.loads(stdout_test)["body"])
-    stdout_latexmk_fp.write_text(body["stdout"])
-    stderr_latexmk_fp.write_text(body["stderr"])
+    # test outputs
+    stdout_fp.write_text(ll.get_stdout(r))
+    stderr_fp.write_text(ll.get_stderr(r))
+
+    # latexmk outputs
+    body = json.loads(json.loads(ll.get_stdout(r))["body"])
+    stdout_latexmk_fp.write_text(ll.get_stdout(body))
+    stderr_latexmk_fp.write_text(ll.get_stderr(body))
+
     pdf_fp.write_bytes(base64.b64decode(body["pdf"]))
 
     # Clean up temporary directory.
