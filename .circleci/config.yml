@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.7.3
+    branches:
+      only:
+        - add-circleci
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          command: make layer
+      - run:
+          command: ls -lah lambdalatex-layer
