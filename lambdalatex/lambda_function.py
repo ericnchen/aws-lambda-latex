@@ -23,16 +23,13 @@ def lambda_handler(event, context):
     extract_zipfile(get_zipfile(event), target=unzip_dir)
 
     infile = unzip_dir / event.get("main_filename", "main.tex")
+    pdf = infile.with_suffix(".pdf")
 
     os.environ["PATH"] = "/opt/bin:" + os.environ["PATH"]
     cmd = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", infile]
     r = subprocess.run(cmd, cwd=unzip_dir, encoding="utf-8", capture_output=True)
 
-    body = {
-        "pdf": read_pdf(infile.with_suffix(".pdf")),
-        "stdout": r.stdout,
-        "stderr": r.stderr,
-    }
+    body = {"pdf": get_pdfstr(pdf), "stdout": get_stdout(r), "stderr": get_stderr(r)}
 
     td.cleanup()
 
@@ -44,9 +41,19 @@ def lambda_handler(event, context):
     }
 
 
-def read_pdf(pdf):
-    """Read a pdf file and base64 encode into a string."""
-    return base64.b64encode(pdf.read_bytes()).decode("utf-8") if pdf.exists() else ""
+def get_stderr(response: subprocess.CompletedProcess) -> str:
+    """Get the stderr of the response."""
+    return response.stderr
+
+
+def get_stdout(response: subprocess.CompletedProcess) -> str:
+    """Get the stdout of the response."""
+    return response.stdout
+
+
+def get_pdfstr(filename: str) -> str:
+    """Return a pdf file as a Base64 encoded string."""
+    return base64.b64encode(pathlib.Path(filename).read_bytes()).decode("utf-8")
 
 
 def extract_zipfile(zip_file: zipfile.ZipFile, target: pathlib.Path):
