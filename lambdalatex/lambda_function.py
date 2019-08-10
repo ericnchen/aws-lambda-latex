@@ -2,6 +2,7 @@
 import base64
 import io
 import json
+import os
 import pathlib
 import subprocess
 import tempfile
@@ -23,6 +24,7 @@ def lambda_handler(event, context):
 
     infile = unzip_dir / event.get("main_filename", "main.tex")
 
+    os.environ["PATH"] = "/opt/bin:" + os.environ["PATH"]
     cmd = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", infile]
     r = subprocess.run(cmd, cwd=unzip_dir, encoding="utf-8", capture_output=True)
 

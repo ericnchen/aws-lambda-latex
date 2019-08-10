@@ -70,11 +70,11 @@ def main(input_dir, output_fn, layer):
     )
 
     stdout_test = r.stdout
-    output_path.with_suffix('.stdout.txt').write_text(stdout_test)
-    output_path.with_suffix('.stderr.txt').write_text(r.stderr)
+    output_path.with_suffix(".stdout.txt").write_text(stdout_test)
+    output_path.with_suffix(".stderr.txt").write_text(r.stderr)
     body = json.loads(json.loads(stdout_test)["body"])
-    output_path.with_suffix('.stdout.latexmk.txt').write_text(body['stdout'])
-    output_path.with_suffix('.stderr.latexmk.txt').write_text(body['stderr'])
+    output_path.with_suffix(".stdout.latexmk.txt").write_text(body["stdout"])
+    output_path.with_suffix(".stderr.latexmk.txt").write_text(body["stderr"])
     output_path.write_bytes(base64.b64decode(body["pdf"]))
 
     # Clean up temporary directory.
