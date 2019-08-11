@@ -71,7 +71,7 @@ def main(input_dir, output_dir, layer):
             f"{pathlib.Path.cwd()}:/var/task",
             "lambci/lambda:python3.7",
             "handler.lambda_handler",
-            json.dumps({"input": make_input_str(input_path)}),
+            json.dumps({"body": {"input": make_input_str(input_path)}}),
             json.dumps({}),
         ],
         encoding="utf-8",
