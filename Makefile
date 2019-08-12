@@ -22,11 +22,11 @@ layer:
 	$(MAKE) -C lambdalatex-layer package
 
 
+test-layer:
+	rm -rf output
+	python localtest.py -i examples/article -o output/docker --compile-with docker
+	python localtest.py -i examples/article -o output/native --compile-with native
+
 # Remove all built artifacts.
 clean:
 	$(MAKE) -C lambdalatex-layer clean
-	rm -rf __localtest__ out.pdf out.stdout.txt out.stderr.txt
-#	rm -f build/lambdalatex.zip
-#	rm -f build/main.pdf
-#	rm -rf build
-#	rm -rf /tmp/lambdalatex

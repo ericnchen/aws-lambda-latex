@@ -5,16 +5,14 @@ export PATH=/opt/bin:$PATH
 export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
 
 # Install packages as needed.
-tlmgr install latexmk beamer etoolbox translator
+tlmgr install latexmk beamer etoolbox translator pgf microtype lm
 
 # Additional symlinks need to be manually created.
 ln -s /opt/texlive/2019/bin/x86_64-linux/latexmk /opt/bin/latexmk
 
 #RUN tlmgr install \
-#            latexmk \
 #            xcolor \
 ##            tcolorbox \
-#            pgf \
 ##            environ \
 ##            trimspaces \
 #            booktabs \
@@ -35,7 +33,6 @@ ln -s /opt/texlive/2019/bin/x86_64-linux/latexmk /opt/bin/latexmk
 ##            footmisc \
 ##            zapfding \
 ##            symbol \
-##            lm \
 ##            sectsty \
 ##            stringstrings \
 ##            koma-script \
@@ -67,13 +64,11 @@ ln -s /opt/texlive/2019/bin/x86_64-linux/latexmk /opt/bin/latexmk
 #            soul \
 #            xargs \
 #            todonotes \
-#            beamer \
 #            patchcmd \
 #            acronym \
 #            bigfoot \
 #            xstring \
 #            subfigure \
-#            microtype \
 #            && \
 ##    tlmgr remove --force luatex && \
 #    rm -f /opt/texlive/2019/tlpkg/texlive.tlpdb* && \
