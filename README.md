@@ -52,6 +52,16 @@ This token should be kept secret as anyone who has it can call the API.
 
 AWS has a generous free usage tier and the costs for hosting this service, with normal usage, should be free or close to it.
 
+## Usage
+
+This API can be called with anything that can make HTTP requests and by anyone with the API tokens generated when deployed.
+Below are a few examples of calling the API from various environments.
+
+1. iOS: Drafts and Shortcuts
+2. CLI: curl, the provided `lambdalatex` tool, the AWS CLI, or Serverless CLI
+3. Julia (holdover from the original version)
+4. Python (as an imported/importable module)
+
 ## Todo
 
 - [ ] Provide options to specify `latexmk` or e.g., `pdflatex`.
