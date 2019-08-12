@@ -13,8 +13,6 @@ import zipfile
 
 import click
 
-import lambdalatex as ll
-
 
 @click.command()
 @click.option(
@@ -79,15 +77,18 @@ def main(input_dir, output_dir, layer):
     )
 
     # test outputs
-    stdout_fp.write_text(ll.get_stdout(r))
-    stderr_fp.write_text(ll.get_stderr(r))
+    stdout_dict = json.loads(r.stdout)
+    lambda_body = stdout_dict.pop("body")
+    lambda_response = json.loads(lambda_body)
 
-    # latexmk outputs
-    body = json.loads(json.loads(ll.get_stdout(r))["body"])
-    stdout_latexmk_fp.write_text(ll.get_stdout(body))
-    stderr_latexmk_fp.write_text(ll.get_stderr(body))
-
-    pdf_fp.write_bytes(base64.b64decode(body["pdf"]))
+    stdout_fp.write_text(json.dumps(stdout_dict))
+    stderr_fp.write_text(r.stderr)
+    if "stdout" in lambda_response:
+        stdout_latexmk_fp.write_text(lambda_response["stdout"])
+    if "stderr" in lambda_response:
+        stdout_latexmk_fp.write_text(lambda_response["stderr"])
+    if "output" in lambda_response:
+        pdf_fp.write_bytes(base64.b64decode(lambda_response["output"]))
 
     # Clean up temporary directory.
     shutil.rmtree(layer_path, ignore_errors=True)
