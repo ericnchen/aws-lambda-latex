@@ -10,7 +10,7 @@ import tempfile
 import zipfile
 from typing import Any, Dict, List, Union
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 logging.basicConfig(level=logging.ERROR)
 
 STATUS_SUCCESS_PDF_GENERATED = 200
@@ -44,6 +44,7 @@ def lambda_handler(event, context):
     try:
         input_zipfile = parse_input(input_body["input"])
     except (zipfile.BadZipFile, FileNotFoundError) as e:
+        logger.error(f"{str(e)}; exiting early")
         return lambda_response(body={"stderr": str(e)}, status_code=500)
 
     # noinspection PyBroadException
@@ -55,7 +56,8 @@ def lambda_handler(event, context):
             )
             output_body = parse_response(response, cwd=temp_dir)
     except Exception as e:
-        msg = "An unknown or unaccounted for exception occurred."
+        msg = f"subprocess failure: during latexmk command"
+        logger.error(f"{msg}; exiting early")
         return lambda_response(body={"stderr": msg}, status_code=500)
 
     status_code = 200 if "output" in output_body else 500
@@ -79,10 +81,10 @@ def parse_input(input_string: str) -> zipfile.ZipFile:
     try:
         input_zipfile.testzip()
     except zipfile.BadZipFile:
-        raise zipfile.BadZipFile("The input given is not a valid zip file.")
+        raise zipfile.BadZipFile("input zipfile: invalid")
     if "main.tex" not in input_zipfile.namelist():
         raise FileNotFoundError("The input zip file does not contain a main.tex file.")
-    logger.error("The input zip file appears to be a valid input.")
+    logger.debug("input zipfile: valid")
     return input_zipfile
 
 
@@ -94,17 +96,15 @@ def get_pdf_processor_flag(processor: str = "pdflatex") -> str:
             default is pdflatex, and invalid choices will also return pdflatex.
     """
     if processor not in ("pdflatex", "lualatex", "xelatex", "pdf", "pdflua", "pdfxe"):
-        logger.error("Invalid choice for processor. Using pdflatex instead.")
+        logger.warning(f"pdf_processor: {processor} invalid; using pdflatex")
         return "-pdf"
     if processor in ("lualatex", "pdflua"):
-        logger.error(f"The processor chosen is lualatex.")
-        logger.error(f"The lualatex processor isn't ready yet. Using pdflatex instead.")
+        logger.warning(f"pdf_processor: {processor} not implemented; using pdflatex")
         return "-pdf"
     if processor in ("xelatex", "pdfxe"):
-        logger.error(f"The processor chosen is xelatex.")
-        logger.error("The xelatex processor isn't ready yet. Using pdflatex instead.")
+        logger.warning(f"pdf_processor: {processor} not implemented; using pdflatex")
         return "-pdf"
-    logger.error("The processor chosen is pdflatex.")
+    logger.debug(f"pdf_processor: pdflatex valid")
     return "-pdf"
 
 
@@ -117,7 +117,7 @@ def get_latexmk_command(body: Union[str, Dict[str, str]]) -> List[str]:
         get_pdf_processor_flag(body.get("pdf_processor")),
         "main.tex",
     ]
-    logger.error(f"The full latexmk command is: {' '.join(command)}")
+    logger.debug(f"latexmk command: {' '.join(command)}")
     return command
 
 
@@ -132,10 +132,10 @@ def parse_response(response: subprocess.CompletedProcess, cwd: str) -> Dict[str,
     body = {}
     output_file = pathlib.Path(cwd + "/main.pdf")
     if not output_file.exists():
-        logger.error("An error occurred and a pdf document was not generated.")
+        logger.error("compilation error: pdf not generated; see stderr")
     else:
         body["output"] = base64.b64encode(output_file.read_bytes()).decode("utf-8")
-        logger.error("Successfully generated a pdf document.")
+        logger.info("compilation success: pdf generated")
     if response.stdout != "":
         body["stdout"] = response.stdout
     if response.stderr != "":
