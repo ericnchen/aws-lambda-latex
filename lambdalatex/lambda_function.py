@@ -32,11 +32,11 @@ def lambda_handler(event, context):
     body = json.loads(event["body"])
     input_zipfile = str64_to_zip(body["input"])
 
-    cmp = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", "main.tex"]
+    cmd = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", "main.tex"]
 
     with tempfile.TemporaryDirectory() as td:
         input_zipfile.extractall(path=td)
-        r = subprocess.run(cmp, cwd=td, encoding="utf-8", capture_output=True)
+        r = subprocess.run(cmd, cwd=td, encoding="utf-8", capture_output=True)
 
         output_body = {
             "pdf": get_pdfstr(td + "/main.pdf"),
