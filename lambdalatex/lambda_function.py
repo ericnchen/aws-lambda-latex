@@ -29,7 +29,7 @@ def lambda_handler(event, context):
         input (str): Base64 encoded zip file containing a main.tex and its
             supporting files.
     """
-    body = json.loads(event["body"])
+    body = parse_body(event["body"])
     input_zipfile = str64_to_zip(body["input"])
 
     cmd = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", "main.tex"]
@@ -50,6 +50,13 @@ def lambda_handler(event, context):
         "isBase64Encoded": False,
         "statusCode": STATUS_SUCCESS_PDF_GENERATED if output_body["pdf"] != "" else 500,
     }
+
+
+def parse_body(body) -> dict:
+    """Parse the request body into a dict."""
+    # When called from APIG body is a JSON str, but is an actual dict when called from
+    # locally via Docker.
+    return json.loads(body) if isinstance(body, str) else body
 
 
 def str64_to_zip(str64: str) -> zipfile.ZipFile:
