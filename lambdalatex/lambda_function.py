@@ -54,8 +54,7 @@ def lambda_handler(event, context):
 
 def parse_body(body) -> dict:
     """Parse the request body into a dict."""
-    # When called from APIG body is a JSON str, but is an actual dict when called from
-    # locally via Docker.
+    # API Gateway gives `body` as a JSON str, but called from Docker gives dict.
     return json.loads(body) if isinstance(body, str) else body
 
 
