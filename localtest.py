@@ -10,6 +10,8 @@ import zipfile
 
 import click
 
+import lambdalatex
+
 
 @click.command()
 @click.option(
@@ -45,10 +47,10 @@ def main(input_dir, output_dir, compile_with):
     input_zipfile = zip_input_dir(input_dir=input_dir, output_dir=output_dir)
     input_zipfile_b64 = base64.b64encode(input_zipfile.read_bytes()).decode("utf-8")
 
-    event = json.dumps({"body": {"input": input_zipfile_b64}})
     context = json.dumps({})
 
     if compile_with == "docker":
+        event = json.dumps({"body": {"input": input_zipfile_b64}})
         command = [
             "docker",
             "run",
@@ -62,10 +64,25 @@ def main(input_dir, output_dir, compile_with):
             event,
             context,
         ]
+        r = subprocess.run(command, encoding="utf-8", capture_output=True)
+
+    elif compile_with == "native":
+        event = {"body": {"input": input_zipfile_b64}}
+        lambda_response = lambdalatex.lambda_handler(event, context)
+        response_body = json.loads(lambda_response["body"])
+
+        class ResponseWrapper:
+            pass
+
+        r = ResponseWrapper()
+        if "stderr" in response_body:
+            r.stderr = response_body["stderr"]
+        if "output" in response_body:
+            r.stdout = json.dumps(
+                {"body": json.dumps({"output": response_body["output"]})}
+            )
     else:
         raise NotImplementedError
-
-    r = subprocess.run(command, encoding="utf-8", capture_output=True)
 
     if r.stderr != "":
         (output_dir / "_stderr.txt").write_text(r.stderr)
