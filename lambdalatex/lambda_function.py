@@ -13,14 +13,12 @@ from typing import Any, Dict, List, Union
 logger = logging.getLogger()
 logging.basicConfig(level=logging.ERROR)
 
-STATUS_SUCCESS_PDF_GENERATED = 200
-
 # Prepend to PATH so that our binaries are found first.
 os.environ["PATH"] = "/opt/bin:" + os.environ["PATH"]
 
 
 # noinspection PyUnusedLocal
-def lambda_handler(event, context):
+def latexmk(event, context):
     """
     `event` contains the request inputs as a JSON `str`. Turn it into a `dict`:
 
@@ -29,14 +27,9 @@ def lambda_handler(event, context):
     Required:
         input (str): Base64 encoded zip file containing a main.tex and its
             supporting files.
-
-    Optional:
-        pdf_processor (str): The processor to use to make the pdf. Choose from
-            pdflatex, lualatex, or xelatex. The default choice is pdflatex, and
-            invalid choices are also set to pdflatex.
     """
     input_body = parse_body(event["body"])
-    latex_command = get_latexmk_command(input_body)
+    latex_command = get_latexmk_command()
 
     # These next commands are wrapped in try/except statements so that some output
     # message is given if an error occurred.
@@ -64,6 +57,19 @@ def lambda_handler(event, context):
     return lambda_response(output_body, status_code=status_code)
 
 
+# noinspection PyUnusedLocal
+def tlmgr_list(event, context):
+    cmd = ["tlmgr", "list", "--only-installed", "--data", "name"]
+    response = subprocess.run(cmd, encoding="utf-8", capture_output=True)
+    body = {}
+    if response.stdout != "":
+        body["output"] = [k for k in response.stdout.split("\n") if k != ""]
+    if response.stderr != "":
+        body["stderr"] = response.stderr
+    status_code = 200 if "output" in body else 500
+    return lambda_response(body, status_code=status_code)
+
+
 def parse_body(body: Union[str, Dict[str, str]]) -> Dict[str, str]:
     """Parse the request body into a dict."""
     # API Gateway gives `body` as a JSON str, but called from Docker gives dict.
@@ -88,35 +94,9 @@ def parse_input(input_string: str) -> zipfile.ZipFile:
     return input_zipfile
 
 
-def get_pdf_processor_flag(processor: str = "pdflatex") -> str:
-    """Return the latexmk flag needed to set the pdf processor.
-
-    Args:
-        processor (optional): Choose from pdflatex, lualatex, or xelatex. The
-            default is pdflatex, and invalid choices will also return pdflatex.
-    """
-    if processor not in ("pdflatex", "lualatex", "xelatex", "pdf", "pdflua", "pdfxe"):
-        logger.warning(f"pdf_processor: {processor} invalid; using pdflatex")
-        return "-pdf"
-    if processor in ("lualatex", "pdflua"):
-        logger.warning(f"pdf_processor: {processor} not implemented; using pdflatex")
-        return "-pdf"
-    if processor in ("xelatex", "pdfxe"):
-        logger.warning(f"pdf_processor: {processor} not implemented; using pdflatex")
-        return "-pdf"
-    logger.debug(f"pdf_processor: pdflatex valid")
-    return "-pdf"
-
-
-def get_latexmk_command(body: Union[str, Dict[str, str]]) -> List[str]:
+def get_latexmk_command() -> List[str]:
     """Return the full latexmk command as a list of strings."""
-    command = [
-        "latexmk",
-        "-verbose",
-        "-interaction=batchmode",
-        get_pdf_processor_flag(body.get("pdf_processor")),
-        "main.tex",
-    ]
+    command = ["latexmk", "-verbose", "-interaction=batchmode", "-pdf", "main.tex"]
     logger.debug(f"latexmk command: {' '.join(command)}")
     return command
 

@@ -11,7 +11,7 @@
 #
 # Happy Coding!
 
-service: lambdalatex-sls
+service: aws-lambda-latex
 
 provider:
   name: aws
@@ -19,15 +19,25 @@ provider:
   runtime: python3.7
   stage: ${opt:stage, 'dev'}
   apiKeys:
-    - lambdalatex-sls-${self:provider.stage}-apikey
+    - aws-lambda-latex-${self:provider.stage}-apikey
 
 functions:
-  compile:
-    handler: handler.lambda_handler
+  latexmk:
+    handler: handler.latexmk
     events:
       - http:
-          path: compile
+          path: latexmk
           method: post
+          private: true
+    layers:
+      - ${cf:aws-lambda-perl-prod.PerlLayerExport}
+      - ${cf:aws-lambda-texlive-prod.TexliveLayerExport}
+  tlmgr_list:
+    handler: handler.tlmgr_list
+    events:
+      - http:
+          path: tlmgr/list
+          method: get
           private: true
     layers:
       - ${cf:aws-lambda-perl-prod.PerlLayerExport}
