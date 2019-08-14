@@ -31,7 +31,7 @@ functions:
           private: true
     layers:
       - ${cf:aws-lambda-perl-prod.PerlLayerExport}
-      - ${cf:lambdalatex-layer-dev.LambdalatexLayerExport}
+      - ${cf:aws-lambda-texlive-prod.TexliveLayerExport}
 
 package:
   exclude:
