@@ -30,6 +30,7 @@ functions:
           method: post
           private: true
     layers:
+      - ${cf:aws-lambda-perl-prod.PerlLayerExport}
       - ${cf:lambdalatex-layer-dev.LambdalatexLayerExport}
 
 package:

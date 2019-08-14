@@ -4,13 +4,10 @@
 
 default: all
 
-all: perl-5.30.0.tar.gz install-tl-unx.tar.gz
-
-perl-5.30.0.tar.gz:
-	curl -LO https://www.cpan.org/src/5.0/$@
+all: install-tl-unx.tar.gz
 
 install-tl-unx.tar.gz:
 	curl -LO http://mirror.ctan.org/systems/texlive/tlnet/$@
 
 clean:
-	rm -f perl-5.30.0.tar.gz install-tl-unx.tar.gz
+	rm -f install-tl-unx.tar.gz

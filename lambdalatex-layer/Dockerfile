@@ -1,15 +1,7 @@
 FROM lambci/lambda:build-python3.7
 
-# Build and install our own perl since AWS Lambda no longer provides it.
-WORKDIR /tmp
-ADD vendor/perl-5.30.0.tar.gz .
-RUN cd perl-5.* && \
-    ./Configure -des -Dman1dir=none -Dman3dir=none -Dprefix=/opt && \
-    make install && \
-    make clean
-
 # TeXLive doesn't *need* wget, but without it seems like network errors happen too much.
-RUN yum -y install wget && \
+RUN yum -y install wget perl-Digest-MD5 && \
     yum -y clean all && \
     rm -rf /var/cache/yum
 
@@ -18,7 +10,7 @@ WORKDIR /tmp
 ADD vendor/install-tl-unx.tar.gz .
 COPY texlive.profile .
 RUN cd install-tl-* && \
-    /opt/bin/perl install-tl --profile ../texlive.profile
+    ./install-tl --profile ../texlive.profile
 
 # Install/remove TeXLive packages as needed.
 WORKDIR /tmp
